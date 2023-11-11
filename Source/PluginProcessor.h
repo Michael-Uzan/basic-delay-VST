@@ -60,8 +60,10 @@ private:
     juce::AudioBuffer<float> delayBuffer;
     int writePosition { 0 };
 
-    void fillDelayBuffer(int channel, float* channelData, int bufferSize, int delayBufferSize);
-    void fillBufferFromDelayBuffer(int channel, float* channelData, int bufferSize, int delayBufferSize, juce::AudioBuffer<float>& buffer);
+    void fillDelayBuffer(int channel, juce::AudioBuffer<float>& buffer);
+    void fillBufferFromDelayBuffer(int channel, juce::AudioBuffer<float>& buffer);
+    void updateWritePosition(juce::AudioBuffer<float>& buffer);
+
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DelayVSTAudioProcessor)
