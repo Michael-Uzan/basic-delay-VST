@@ -143,33 +143,33 @@ void DelayVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
-        fillDelayBuffer(channel, writePosition, channelData, bufferSize, delayBufferSize);
+        fillDelayBuffer(channel, channelData, bufferSize, delayBufferSize);
     }
 
     writePosition += bufferSize;
     writePosition %= delayBufferSize;
 }
 
-void DelayVSTAudioProcessor::fillDelayBuffer(int channel,int writePosition, float* channelData, int bufferSize, int delayBufferSize)
+void DelayVSTAudioProcessor::fillDelayBuffer(int channel, float* channelData, int bufferSize, int delayBufferSize)
 {
     // Check to see if main buffer copies to delay buffer without needing to  wrap.
     if (writePosition + bufferSize < delayBufferSize)
     {
         // Copy main buffer contents to delay buffer without wrapping.
-        delayBuffer.copyFrom(channel, writePosition, channelData, bufferSize, 1.0f);
+        delayBuffer.copyFrom(channel, writePosition, channelData, bufferSize);
     }
     else {
         // Calculate how much space is left at the end of the delay buffer.
         auto numSamplesToEnd = delayBufferSize - writePosition;
 
         // Copy that amount of contents to the end.
-        delayBuffer.copyFrom(channel, writePosition, channelData, numSamplesToEnd, 1.0f);
+        delayBuffer.copyFrom(channel, writePosition, channelData, numSamplesToEnd);
 
         // Calculate how much contents is remaing to copy.
         auto numSamplesAtStart = bufferSize - numSamplesToEnd;
 
         // Copy that remaing amount to the begining of delay buffer.
-        delayBuffer.copyFrom(channel, 0, channelData, numSamplesAtStart, 1.0f);
+        delayBuffer.copyFrom(channel, 0, channelData + numSamplesToEnd, numSamplesAtStart);
     }
 }
 
