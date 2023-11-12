@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "ParametersInfo.h"
 
 //==============================================================================
 DelayVSTAudioProcessor::DelayVSTAudioProcessor()
@@ -19,7 +20,7 @@ DelayVSTAudioProcessor::DelayVSTAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ), parameters(*this, nullptr, "Parameters", createParameters())
 #endif
 {
 }
@@ -182,10 +183,12 @@ void DelayVSTAudioProcessor::fillBufferFromDelayBuffer(int channel, juce::AudioB
 {
     auto bufferSize = buffer.getNumSamples();
     auto delayBufferSize = delayBuffer.getNumSamples();
-    // 1 second of audio drom the past.
-    float delayRate = getSampleRate() * 1.0f;
-    auto gainFactor = 0.7f;
-    auto readPosition = writePosition - delayRate;
+    auto* delayTimeMs = parameters.getRawParameterValue(ParametersInfo::getId(ParametersInfo::delayTime));
+    auto* feedback = parameters.getRawParameterValue(ParametersInfo::getId(ParametersInfo::feedback));
+    auto gainFactor = feedback->load();
+    auto delaySampleSize = delayTimeMs->load() * getSampleRate() / 1000.0f ;
+
+    auto readPosition = writePosition - delaySampleSize;
 
     if (readPosition < 0)
         readPosition += delayBufferSize;
@@ -221,7 +224,7 @@ bool DelayVSTAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* DelayVSTAudioProcessor::createEditor()
 {
-    return new DelayVSTAudioProcessorEditor (*this);
+    return new juce::GenericAudioProcessorEditor (*this);
 }
 
 //==============================================================================
@@ -243,4 +246,17 @@ void DelayVSTAudioProcessor::setStateInformation (const void* data, int sizeInBy
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new DelayVSTAudioProcessor();
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout DelayVSTAudioProcessor::createParameters()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> parameters;
+
+    for (const auto& [key, param] : ParametersInfo::parameterInfoMap)
+    {
+        parameters.push_back(std::make_unique<juce::AudioParameterFloat>(param.id, param.labelName, param.defaultValue, param.lowerLimit, param.upperLimit));
+    }
+
+    return { parameters.begin(), parameters.end() };
+
 }

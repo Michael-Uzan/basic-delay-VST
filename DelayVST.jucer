@@ -11,6 +11,10 @@
       <FILE id="PlvGq4" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
       <FILE id="JbcNfs" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="vYwXsp" name="ParametersInfo.cpp" compile="1" resource="0"
+            file="Source/ParametersInfo.cpp"/>
+      <FILE id="n9NKAK" name="ParametersInfo.h" compile="0" resource="0"
+            file="Source/ParametersInfo.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

@@ -59,7 +59,9 @@ public:
 private:
     juce::AudioBuffer<float> delayBuffer;
     int writePosition { 0 };
+    juce::AudioProcessorValueTreeState parameters;
 
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     void fillDelayBuffer(int channel, juce::AudioBuffer<float>& buffer);
     void fillBufferFromDelayBuffer(int channel, juce::AudioBuffer<float>& buffer);
     void updateWritePosition(juce::AudioBuffer<float>& buffer);
