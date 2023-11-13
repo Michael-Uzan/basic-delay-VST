@@ -94,7 +94,7 @@ void DelayVSTAudioProcessor::changeProgramName (int index, const juce::String& n
 //==============================================================================
 void DelayVSTAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    auto delayBufferSize = sampleRate * 2.0; // Two seconds of audio.
+    auto delayBufferSize = sampleRate * 10.0; // Ten seconds of audio.
     delayBuffer.setSize(getTotalNumOutputChannels(), (int)delayBufferSize);
 }
 
@@ -144,11 +144,11 @@ void DelayVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     {
         
         fillDelayBuffer(channel, buffer);
-        fillBufferFromDelayBuffer(channel,  buffer);
+        fillBufferFromDelayBuffer(channel,  buffer, delayBuffer);
         fillDelayBuffer(channel,  buffer);
     }
 
-    updateWritePosition(buffer);
+    updateWritePosition(buffer, delayBuffer);
 
 }
 
@@ -159,7 +159,7 @@ void DelayVSTAudioProcessor::fillDelayBuffer(int channel, juce::AudioBuffer<floa
     auto delayBufferSize = delayBuffer.getNumSamples();
 
     // Check to see if main buffer copies to delay buffer without needing to  wrap.
-    if (writePosition + bufferSize < delayBufferSize)
+    if (delayBufferSize >= writePosition + bufferSize )
     {
         // Copy main buffer contents to delay buffer without wrapping.
         delayBuffer.copyFrom(channel, writePosition, channelData, bufferSize);
@@ -175,11 +175,11 @@ void DelayVSTAudioProcessor::fillDelayBuffer(int channel, juce::AudioBuffer<floa
         auto numSamplesAtStart = bufferSize - numSamplesToEnd;
 
         // Copy that remaing amount to the begining of delay buffer.
-        delayBuffer.copyFrom(channel, 0, channelData + numSamplesToEnd, numSamplesAtStart);
+        delayBuffer.copyFrom(channel, 0, buffer.getWritePointer(channel, numSamplesToEnd), numSamplesAtStart);
     }
 }
 
-void DelayVSTAudioProcessor::fillBufferFromDelayBuffer(int channel, juce::AudioBuffer<float>& buffer)
+void DelayVSTAudioProcessor::fillBufferFromDelayBuffer(int channel, juce::AudioBuffer<float>& buffer, juce::AudioBuffer<float>& delayBuffer)
 {
     auto bufferSize = buffer.getNumSamples();
     auto delayBufferSize = delayBuffer.getNumSamples();
@@ -188,7 +188,7 @@ void DelayVSTAudioProcessor::fillBufferFromDelayBuffer(int channel, juce::AudioB
     auto gainFactor = feedback->load();
     auto delaySampleSize = delayTimeMs->load() * getSampleRate() / 1000.0f ;
 
-    auto readPosition = writePosition - delaySampleSize;
+    auto readPosition = std::round(writePosition - delaySampleSize);
 
     if (readPosition < 0)
         readPosition += delayBufferSize;
@@ -207,7 +207,7 @@ void DelayVSTAudioProcessor::fillBufferFromDelayBuffer(int channel, juce::AudioB
     }
 }
 
-void DelayVSTAudioProcessor::updateWritePosition(juce::AudioBuffer<float>& buffer)
+void DelayVSTAudioProcessor::updateWritePosition(juce::AudioBuffer<float>& buffer, juce::AudioBuffer<float>& delayBuffer)
 {
     auto bufferSize = buffer.getNumSamples();
     auto delayBufferSize = delayBuffer.getNumSamples();
@@ -224,7 +224,8 @@ bool DelayVSTAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* DelayVSTAudioProcessor::createEditor()
 {
-    return new juce::GenericAudioProcessorEditor (*this);
+     return new juce::GenericAudioProcessorEditor (*this);
+    //return new DelayVSTAudioProcessorEditor(*this);
 }
 
 //==============================================================================

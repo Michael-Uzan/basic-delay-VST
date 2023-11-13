@@ -36,8 +36,11 @@
   <EXPORTFORMATS>
     <VS2022 targetFolder="Builds/VisualStudio2022">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="DelayVST"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="DelayVST"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="DelayVST" enablePluginBinaryCopyStep="1"
+                       linkTimeOptimisation="1" vst3BinaryLocation="D:\AudioLab\Desktop\AudioProgrammer\JUCE\JuceDebugVST3"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="DelayVST" enablePluginBinaryCopyStep="1"
+                       vst3BinaryLocation="D:\AudioLab\Desktop\AudioProgrammer\JUCE\JuceDebugVST3"
+                       enableIncrementalLinking="1"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../JUCE/modules"/>

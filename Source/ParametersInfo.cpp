@@ -23,8 +23,8 @@ const juce::Identifier ParametersInfo::highpass{ "highpass" };
 
 std::map<juce::Identifier, ParametersInfo::ParameterValues> ParametersInfo::parameterInfoMap
 {
-    { ParametersInfo::delayTime, { "DELAYMS", "Delay Ms", 0.0f, 1000.0f, 0.0f } },
-    { ParametersInfo::feedback, { "FEEDBACK", "Feedback", 0.0f, 1.0f, 0.0f } },
+    { ParametersInfo::delayTime, { "DELAYMS", "Delay Ms", 0.0f, 1000.0f, 0.2f } },
+    { ParametersInfo::feedback, { "FEEDBACK", "Feedback", 0.0f, 1.0f, 0.4f } },
     /*
     
     Todo: Featues to add:
