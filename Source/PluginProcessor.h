@@ -60,12 +60,14 @@ private:
     juce::AudioBuffer<float> delayBuffer;
     int writePosition { 0 };
     juce::AudioProcessorValueTreeState parameters;
+    juce::LinearSmoothedValue<float> smoothFeedback{ 0.4f };
+    juce::LinearSmoothedValue<float> smoothDelayTime{ 200.0f };
 
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     void fillDelayBuffer(int channel, juce::AudioBuffer<float>& buffer);
     void fillBufferFromDelayBuffer(int channel, juce::AudioBuffer<float>& buffer, juce::AudioBuffer<float>& delayBuffer);
     void updateWritePosition(juce::AudioBuffer<float>& buffer, juce::AudioBuffer<float>& delayBuffer);
-
+    float getSmoothValue(juce::Identifier identifier);
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DelayVSTAudioProcessor)

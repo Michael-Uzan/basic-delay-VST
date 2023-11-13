@@ -94,8 +94,11 @@ void DelayVSTAudioProcessor::changeProgramName (int index, const juce::String& n
 //==============================================================================
 void DelayVSTAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    auto delayBufferSize = sampleRate * 10.0; // Ten seconds of audio.
+    // Todo: remove floats to a global const values.
+    auto delayBufferSize = sampleRate * 10.0; // Ten seconds of audio. 
     delayBuffer.setSize(getTotalNumOutputChannels(), (int)delayBufferSize);
+    smoothFeedback.reset(sampleRate, 0.001);
+    smoothDelayTime.reset(sampleRate, 0.001);
 }
 
 void DelayVSTAudioProcessor::releaseResources()
@@ -183,10 +186,11 @@ void DelayVSTAudioProcessor::fillBufferFromDelayBuffer(int channel, juce::AudioB
 {
     auto bufferSize = buffer.getNumSamples();
     auto delayBufferSize = delayBuffer.getNumSamples();
-    auto* delayTimeMs = parameters.getRawParameterValue(ParametersInfo::getId(ParametersInfo::delayTime));
-    auto* feedback = parameters.getRawParameterValue(ParametersInfo::getId(ParametersInfo::feedback));
-    auto gainFactor = feedback->load();
-    auto delaySampleSize = delayTimeMs->load() * getSampleRate() / 1000.0f ;
+    auto delayTime = getSmoothValue(ParametersInfo::delayTime);
+    auto feedback = getSmoothValue(ParametersInfo::feedback);
+    auto delaySampleSize = delayTime * getSampleRate() / 1000.0f; // Todo: change float to a global const value (milisecondToSeconed).
+
+
 
     auto readPosition = std::round(writePosition - delaySampleSize);
 
@@ -195,14 +199,14 @@ void DelayVSTAudioProcessor::fillBufferFromDelayBuffer(int channel, juce::AudioB
 
     if (readPosition + bufferSize < delayBufferSize)
     {
-        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), bufferSize, gainFactor, gainFactor);
+        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), bufferSize, feedback, feedback);
     }
     else {
         auto numSamplesToEnd = delayBufferSize - readPosition;
-        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), numSamplesToEnd, gainFactor, gainFactor);
+        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), numSamplesToEnd, feedback, feedback);
 
         auto numSamplesAtStart = bufferSize - numSamplesToEnd;
-        buffer.addFromWithRamp(channel, numSamplesToEnd, delayBuffer.getReadPointer(channel, 0), numSamplesAtStart, gainFactor, gainFactor);
+        buffer.addFromWithRamp(channel, numSamplesToEnd, delayBuffer.getReadPointer(channel, 0), numSamplesAtStart, feedback, feedback);
 
     }
 }
@@ -214,6 +218,25 @@ void DelayVSTAudioProcessor::updateWritePosition(juce::AudioBuffer<float>& buffe
 
     writePosition += bufferSize;
     writePosition %= delayBufferSize;
+}
+
+float  DelayVSTAudioProcessor::getSmoothValue(juce::Identifier identifier)
+{
+    auto id = ParametersInfo::getId(identifier);
+    auto* targetValue = parameters.getRawParameterValue(id);
+
+    // Todo: change string to a global const value.
+    // change to switch case or different method, if we got more parameters.
+    if (id == "FEEDBACK") {
+        smoothFeedback.setTargetValue(targetValue->load());
+        return smoothFeedback.getNextValue();
+    }
+    else 
+    {
+        smoothDelayTime.setTargetValue(targetValue->load());
+        return smoothDelayTime.getNextValue();
+    }
+    
 }
 
 //==============================================================================
